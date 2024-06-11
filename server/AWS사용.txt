@@ -1,0 +1,50 @@
+1. AWS 계정 생성 : https://growth-coder.tistory.com/113
+
+<인스턴스>
+2. 인스턴스 생성
+3. "네트워크 보완" -> 탄력적 IP -> 탄력적 IP 주소 할당 -> 기본선택사항 "할당" -> 작업 -> 탄력적 IP 주소 연결
+   -> 생성한 인스턴스 선택 -> 연결(연결안하면 과금 발생)
+
+<RDS>
+4. aws 아이콘 옆에 "서비스" 클릭 -> 데이터베이스 -> RDS -> 데이터베이스 생성 -> 엔진옵션 "MariaDB" 선택
+   -> 템플릿 "프리티어" 선택  -> 아래 링크 참고하여 생성할것
+   https://aws.amazon.com/ko/getting-started/hands-on/create-mariadb-db/
+   https://velog.io/@yeoonnii/AWS-RDS-MariaDB-%ED%94%84%EB%A6%AC%ED%8B%B0%EC%96%B4-%EC%83%9D%EC%84%B1
+   https://blog.naver.com/moon-over/222075669383
+   https://koiking.tistory.com/17
+5. VPC 보안그룹 -> default -> 작업 -> 인바운드 규칙 편집 -> 규칙 추가 -> MySQL/Auroa, TCP, 3306, 사용자지정(구글검색창 findip :1.212.30.182/32) -> 규칙 저장
+6. HeidiSQL 실행
+   네트워크 유형 : MariaDB or MySQL(TCP)
+   Library : libmariadb.dll
+   호스트명/IP :  RDS->데이터베이스->연결및보안->엔드포인트
+   사용자 : RDS에서 설정한 사용자명
+   암호 : RDS에서 설정한 암호(8글자 이상)
+   포트 : 3306
+   **** 로컬컴퓨터에서 테스트했던 DB와 table을 "데이터베이스를 SQL로 내보내기"한 내용을 위의 AWS 데이터베이스에 쿼리만 복사해서 붙여넣기 해서 실행할 것
+7. 우리가 만든 DB 식별자 선택 -> 작업 -> EC2 연결설정
+
+<S3 : Amazon Simple Storage Service>
+8. 파일(파일 또는 이미지)을 업로드하기 위한 방법
+(1) IAM : 사용자 생성
+    사용자이름 입력 -> 권한옵션 "직접 정책 연결" -> S3 검색 : AmazonS3FullAccess 선택 -> 다음 -> 생성
+    생성된 사용자명을 클릭하면 "액세스 키 만들기" 클릭 -> "AWS 외부에서 실행되는 애플리케이션" 선택 -> 설명 입력하고 "액세스 키 만들기" 클릭
+    AKIAZI2LDI2QZ6ZU6VKD(액세스키 복사) -> .csv 파일 다운로드 -> 완료
+(2) S3 버킷 생성 : https://celdan.tistory.com/36 참고
+    AWS 서비스에서 S3을 검색
+    "버킷 만들기"
+
+8. server 폴더에서 npm install aws-sdk 설치하고 파일 업로드 내용이 있는 라우터의 코드 수정
+9. client 폴더에서 .env 파일과 업로드 이미지 경로 수정
+10. 빌드 후 EC2에 server폴더 업로드
+    로그인 : ssh -i "mystarkey.pem" ubuntu@ec2-3-37-102-27.ap-northeast-2.compute.amazonaws.com
+            로그인해서 디렉토리를 만들거나(mkdir 디렉토리명) 디렉토리 내 파일을 확인(ls -l)할 수 있음
+            업로드 전 프로젝트에 필요한 파일 설치
+            sudo apt update
+            sudo apt install npm (설치확인: npm -v)
+            sudo apt install nodejs (설치확인: node -v)
+    업로드 : 별도의 PowerShell 창을 열어서 수행
+            scp -i "mystarkey.pem" -r "C:\\Users\\Administrator.User -2023DAOKO\\Desktop\\home\\server" ubuntu@ec2-3-37-102-27.ap-northeast-2.compute.amazonaws.com:/home/ubuntu/
+            코드를 수정한 경우 server 폴더 삭제후 다시 업로드 : cd /home/ubuntu 폴더로 이동 후 rm -rf server, 다시 업로드할때 별도의 PowerShell 창에서 실행
+            cd /home/ubuntu/server -> npm install -> sudo npm start 
+
+
