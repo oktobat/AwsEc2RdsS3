@@ -1,10 +1,10 @@
 // 데이터베이스 연결하기
 import mysql from 'mysql'
 export const db = mysql.createPool({
-    host:'본인꺼',        
-    user:'본인꺼',               
-    password:'본인꺼',           
-    database:'본인꺼',       
+    host:'RDS 데이터베이스 DB 식별자 엔드포인트',        
+    user:'RDS 데이터베이스 사용자명',               
+    password:'RDS 데이터베이스 비밀번호',           
+    database:'RDS 데이터베이스 데이터베이스명',       
     connectionLimit: 10, // 필요에 따라 조정하세요
 });
 // 연결 테스트

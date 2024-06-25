@@ -1,19 +1,29 @@
 1. AWS 계정 생성 : https://growth-coder.tistory.com/113
+                  https://brunch.co.kr/@topasvga/342
 
 <인스턴스>
 2. 인스턴스 생성
 3. "네트워크 보완" -> 탄력적 IP -> 탄력적 IP 주소 할당 -> 기본선택사항 "할당" -> 작업 -> 탄력적 IP 주소 연결
-   -> 생성한 인스턴스 선택 -> 연결(연결안하면 과금 발생)
+   -> 생성한 인스턴스 선택 -> 연결(연결안하면 과금이 없다고 했지만 2월부터 바껴서 과금발생함)
 
 <RDS>
 4. aws 아이콘 옆에 "서비스" 클릭 -> 데이터베이스 -> RDS -> 데이터베이스 생성 -> 엔진옵션 "MariaDB" 선택
-   -> 템플릿 "프리티어" 선택  -> 아래 링크 참고하여 생성할것
-   https://aws.amazon.com/ko/getting-started/hands-on/create-mariadb-db/
+   -> 템플릿 "프리티어" 선택  -> 나머지 사항은 아래 링크 참고하여 생성할것
    https://velog.io/@yeoonnii/AWS-RDS-MariaDB-%ED%94%84%EB%A6%AC%ED%8B%B0%EC%96%B4-%EC%83%9D%EC%84%B1
-   https://blog.naver.com/moon-over/222075669383
    https://koiking.tistory.com/17
-5. VPC 보안그룹 -> default -> 작업 -> 인바운드 규칙 편집 -> 규칙 추가 -> MySQL/Auroa, TCP, 3306, 사용자지정(구글검색창 findip :1.212.30.182/32) -> 규칙 저장
-6. HeidiSQL 실행
+   https://aws.amazon.com/ko/getting-started/hands-on/create-mariadb-db/
+5. VPC 보안그룹 -> default -> 체크 선택 -> 아래쪽 "인바운드 규칙 편집"
+   -> "모든 트래픽"은 기본으로 추가되어 있을 것임
+   -> 규칙 추가 -> MySQL/Auroa, TCP, 3306, 사용자지정(구글검색창 findip :1.212.30.182/32) 
+   -> 규칙 추가 -> SSH, TCP, 22, 사용자지정, 0.0.0.0/0
+   -> 규칙 추가 -> HTTP, TCP, 80, 사용자지정, 0.0.0.0/0
+   -> 규칙 추가 -> HTTPS, TCP, 443, 사용자지정, 0.0.0.0/0
+   -> 규칙 저장
+   "아웃바운드 규칙 편집"
+   -> 규칙 추가 -> 모든 트래픽, 전체, 전체, 사용자지정, 0.0,0.0/0
+   -> 규칙 저장
+6. 우리가 만든 DB 식별자 선택 -> 작업 -> EC2 연결설정(위에서 생성한 인스턴스와 연결)
+7. HeidiSQL 실행
    네트워크 유형 : MariaDB or MySQL(TCP)
    Library : libmariadb.dll
    호스트명/IP :  RDS->데이터베이스->연결및보안->엔드포인트
@@ -21,10 +31,13 @@
    암호 : RDS에서 설정한 암호(8글자 이상)
    포트 : 3306
    **** 로컬컴퓨터에서 테스트했던 DB와 table을 "데이터베이스를 SQL로 내보내기"한 내용을 위의 AWS 데이터베이스에 쿼리만 복사해서 붙여넣기 해서 실행할 것
-7. 우리가 만든 DB 식별자 선택 -> 작업 -> EC2 연결설정
+        create table 쿼리 붙여넣기 할때 foreign key 없는 table 부터 먼저 할것
+8. server 폴더에서 db.js 파일도 위의 호스트명, 사용자, 암호, 데이터베이스명으로 수정
+9. server 폴더에서 web.js 파일 수정
+   const PORT = 80
 
 <S3 : Amazon Simple Storage Service>
-8. 파일(파일 또는 이미지)을 업로드하기 위한 방법
+10. 파일(파일 또는 이미지)을 업로드하기 위한 방법
 (1) IAM : 사용자 생성
     사용자이름 입력 -> 권한옵션 "직접 정책 연결" -> S3 검색 : AmazonS3FullAccess 선택 -> 다음 -> 생성
     생성된 사용자명을 클릭하면 "액세스 키 만들기" 클릭 -> "AWS 외부에서 실행되는 애플리케이션" 선택 -> 설명 입력하고 "액세스 키 만들기" 클릭
@@ -32,19 +45,62 @@
 (2) S3 버킷 생성 : https://celdan.tistory.com/36 참고
     AWS 서비스에서 S3을 검색
     "버킷 만들기"
+(3) 버킷생성후 버킷 이름, 액세스키, 시크릿키를 productRouter.js(이미지 업로드가 있는 라우터)에 적기
+    필요한 라이브러리 2개 설치 : npm i aws-sdk multer
+                               import multer from "multer"
+                               import AWS from 'aws-sdk';
+                               import fs from 'fs';
+    const upload = multer({ dest: 'uploads/' });
+    const s3 = new AWS.S3({
+      accessKeyId: '액세스키',
+      secretAccessKey: '시크릿키',
+      region: 'ap-northeast-2'
+    });   
+    const params = {
+        Bucket: '버킷이름',  
+        Key: req.file.filename,
+        Body: fileContent
+    };
+11. client 폴더에서 업로드 이미지 경로 수정
+   <img src={`${serverUrl}/uploads/${item.photo}`} alt={item.name} />
+   <img src={item.photo} alt={item.name} />
 
-8. server 폴더에서 npm install aws-sdk 설치하고 파일 업로드 내용이 있는 라우터의 코드 수정
-9. client 폴더에서 .env 파일과 업로드 이미지 경로 수정
-10. 빌드 후 EC2에 server폴더 업로드
-    로그인 : ssh -i "mystarkey.pem" ubuntu@ec2-3-37-102-27.ap-northeast-2.compute.amazonaws.com
-            로그인해서 디렉토리를 만들거나(mkdir 디렉토리명) 디렉토리 내 파일을 확인(ls -l)할 수 있음
-            업로드 전 프로젝트에 필요한 파일 설치
-            sudo apt update
-            sudo apt install npm (설치확인: npm -v)
-            sudo apt install nodejs (설치확인: node -v)
-    업로드 : 별도의 PowerShell 창을 열어서 수행
-            scp -i "mystarkey.pem" -r "C:\\Users\\Administrator.User -2023DAOKO\\Desktop\\home\\server" ubuntu@ec2-3-37-102-27.ap-northeast-2.compute.amazonaws.com:/home/ubuntu/
-            코드를 수정한 경우 server 폴더 삭제후 다시 업로드 : cd /home/ubuntu 폴더로 이동 후 rm -rf server, 다시 업로드할때 별도의 PowerShell 창에서 실행
-            cd /home/ubuntu/server -> npm install -> sudo npm start 
+<소스 코드 배포하기>
+12. ssh 로그인 안되는 문제 해결 
+   *.pem 키가 있는 폴더에서 마우스 우클릭 > "속성" > "보안" > "Administrator" 선택 > 중간에 "고급" > "Administrator" 선택 > 아래쪽에 "상속사용안함" 클릭 > "이 개체에서 상속된 사용권한을 모두 제거합니다." 선택 > 확인 > 확인
+13. 기존에 build 폴더가 있으면 build 폴더 삭제
+    npm run build
+    server 폴더에 node_modules 폴더도 삭제
+    ssh 로그인 : 파워셀창 열어서 ssh -i "*.pem 파일이 있는 경로와 파일명" ubuntu@퍼블릭 IPv4 DNS
+                로그인 성공하면 아래 세 명령 실행(처음 한번만)
+                sudo apt update
+                sudo apt install npm (설치확인: npm -v)
+                sudo apt install nodejs (설치확인: node -v)
+    업로드 : 별도의 PowerShell 창을 열어야 함
+            scp -i "*.pem 파일 경로(위랑 같음)" -r "sever 폴더 경로" ubuntu@퍼블릭 IPv4 DNS:/home/ubuntu/
+    업로드 완료되면 ssh 창으로 이동
+            cd /home/ubuntu/server
+            ls -l (업로드 파일 목록 확인)
+            npm install (node_modules 새로 설치)
+            sudo npm start (서버 실행)
+            브라우저 주소창에 "퍼블릭 IPv4 DNS" 복사해서 붙여넣기
+14. 코드 수정한 경우
+    client 코드를 수정한 경우에는 build 폴더 삭제하고 npm run build 다시 할것
+    ssh 창에서 이전에 업로드한 server 폴더 삭제할것 : cd /home/ubuntu/ 
+                                                   rm -rf server
+                                                   ls -l 
+    PoserShell 창에서 다시 업로드 : scp -i "*.pem 파일 경로(위랑 같음)" -r "sever 폴더 경로" ubuntu@퍼블릭 IPv4 DNS:/home/ubuntu/
+    ssh 창에서 cd /home/ubuntu/server 이동
+    npm install
+    sudo npm start (서버 재실행)
+
+<AWS 과금 주의사항>
+인스턴스 중지 : 7일 후에는 자동 재실행되므로 사용하지 않는 인스턴스는 중지 후 반드시 종료해야 삭제됨
+               https://blog.naver.com/moon-over/222075669383
+인스턴스 종료 : 작업 > 인스턴스 중지 후 종료
+인스턴스 종료할때(삭제할때) "이 인스턴스를 종료한 후 연결된 리소스로 인해 비용이 발생할 수 있습니다." 나오면
+                인스턴스 선택 > 작업 > 네트워킹 > 탄력적 IP 주소 연결 해제
+VPC 대시보드 : 서브넷 > 보이는 서브넷 ID들 하나씩 체크선택 > 작업 > 서브넷 설정 편집 > 자동 할당 IP 설정에서 "퍼블릿 IPv4 주소 자동 할당 활성화" 선택해제
+탄력적 IP 주소 사용 안하는 대신 도메인을 구매해서 연결하는 방법도 있음. 도메인 비용은 1년에 23,000원 정도임
 
 

@@ -20,11 +20,14 @@ const productRouter = express.Router()
 
 const upload = multer({ dest: 'uploads/' });
 
+// 아래 주석해제하고 본인걸로 수정
 const s3 = new AWS.S3({
-    accessKeyId: '본인꺼', 
-    secretAccessKey: '본인꺼',
-    region: 'ap-northeast-2'
+    // accessKeyId: '본인 액세스키',
+    // secretAccessKey: '본인 시크릿키',
+    // region: 'ap-northeast-2'
 });
+
+
 
 // 한개의 파일을 업로드할 때는 upload.single("photo")
 // 여러개 파일을 업로드할 때는 upload.array("photos", 5)
@@ -34,7 +37,7 @@ productRouter.post("/register", upload.single("photo"), (req, res)=>{
     }
     const fileContent = fs.createReadStream(req.file.path);
     const params = {
-        Bucket: '본인꺼',  // 본인의 버킷명
+        Bucket: '본인 버킷명',  // 본인의 버킷명
         Key: req.file.filename,
         Body: fileContent
     };
@@ -61,6 +64,7 @@ productRouter.post("/register", upload.single("photo"), (req, res)=>{
             }
         })
     })
+
 })
 
 productRouter.get("/list", (req, res)=>{
